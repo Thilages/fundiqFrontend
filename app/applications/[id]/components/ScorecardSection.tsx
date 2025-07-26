@@ -69,7 +69,7 @@ function ScoreCard({
             {confidence}% confidence
           </Badge>
         </div>
-        <Progress value={score * 10} className="mt-2" />
+        <Progress value={score} className="mt-2" />
         {summary && (
           <p className="text-xs text-muted-foreground mt-2">{summary}</p>
         )}

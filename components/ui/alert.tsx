@@ -33,4 +33,11 @@ const AlertDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttrib
 )
 AlertDescription.displayName = "AlertDescription"
 
-export { Alert, AlertDescription }
+const AlertTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTMLHeadingElement>>(
+  ({ className, ...props }, ref) => (
+    <h3 ref={ref} className={cn("text-sm font-semibold", className)} {...props} />
+  ),
+)
+AlertTitle.displayName = "AlertTitle"
+
+export { Alert, AlertDescription, AlertTitle }

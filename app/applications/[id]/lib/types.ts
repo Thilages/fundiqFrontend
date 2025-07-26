@@ -21,17 +21,23 @@ export interface ApplicationDetail {
     [key: string]: {
       confidence_score: number;
       score: number;
-      bucket: string;
+      bucket?: string;
+      summary?: string;
       confidenceScore: number;
-      issues: string[];
+      issues: Array<
+        string | { issue: string; impact?: string; relevance?: string }
+      >;
       manualCheck: boolean;
-      breakdown?: any;
+      manual_check?: boolean;
+      breakdown?: {
+        [key: string]: {
+          score: number;
+          rationale: string;
+        };
+      };
     };
   };
 }
 
 // Type for processing actions
 export type ProcessingAction = "extract" | "enhance" | "evaluate";
-
-
-

@@ -2297,7 +2297,7 @@ export function RawDataSection({
         )}
 
         {/* Contact and Metadata */}
-        {(contact_info || extraction_metadata) && (
+        {/* {(contact_info || extraction_metadata) && (
           <Section
             title="Metadata & Contact"
             icon={Info}
@@ -2382,7 +2382,7 @@ export function RawDataSection({
               </div>
             )}
           </Section>
-        )}
+        )} */}
       </div>
     </div>
   );

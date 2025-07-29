@@ -456,9 +456,9 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between space-y-2 min-w-0">
         <div className="flex items-center space-x-2 min-w-0">
-          <SidebarTrigger />
+          
           <h2 className="text-3xl font-bold tracking-tight truncate">
-            Dashboard
+             Dashboard
           </h2>
         </div>
         <div className="flex items-center space-x-4 flex-shrink-0">
@@ -524,7 +524,7 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Applications */}
-      {!error && applications.length > 0 && (
+      {/* {!error && applications.length > 0 && (
         <Card className="min-w-0">
           <CardHeader>
             <CardTitle>Recent Applications</CardTitle>
@@ -568,7 +568,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-      )}
+      )} */}
 
       {/* All Applications Table */}
       {!error && applications.length > 0 && (
@@ -607,7 +607,7 @@ function ApplicationsTable({ applications }: { applications: Application[] }) {
       </CardHeader>
       <CardContent className="p-0">
         {/* Search and Filter Controls */}
-        <div className="flex items-center space-x-4 mb-6 p-6 pb-0">
+        {/* <div className="flex items-center space-x-4 mb-6 p-6 pb-0">
           <div className="relative flex-1 max-w-sm min-w-0">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -625,7 +625,7 @@ function ApplicationsTable({ applications }: { applications: Application[] }) {
               <SelectItem value="completed">Completed</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
 
         {/* Applications Table */}
         <div className="overflow-x-auto">

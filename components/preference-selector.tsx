@@ -4,13 +4,6 @@ import type React from "react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -21,306 +14,77 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
-import { Settings, Plus, Check, Loader2, AlertCircle } from "lucide-react";
+import { Settings, Loader2, Save } from "lucide-react";
 
 // Updated firm ID as requested
-const TEMP_FIRM_ID = "62773c6e-4516-4c01-bb31-0e3cf2517b58";
+const TEMP_FIRM_ID = "f5fef2ab-f981-4e90-8845-6783ddee5de0";
 
-interface Preference {
-  id: string;
-  preference_name: string;
-  custom_rules_text: string;
-  dimensions: {
-    founders: number;
-    product: number;
-    market: number;
-    vision: number;
-    traction: number;
-    investors: number;
-  };
-  created_at?: string;
-  updated_at?: string;
+// Helper function to check if custom evaluations are enabled
+export async function isCustomEvaluationEnabled(): Promise<boolean> {
+  try {
+    const response = await fetch(`/api/preferences/${TEMP_FIRM_ID}`, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return data?.preferences?.use_custom_eval ?? false;
+    }
+    return false;
+  } catch (error) {
+    console.error("Failed to check custom evaluation status:", error);
+    return false;
+  }
 }
 
-function CreateFilterModal({ onSuccess }: { onSuccess: () => void }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    preference_name: "",
-    custom_rules_text: "",
-    weights: {
-      founders: 75,
-      market: 60,
-      product: 35,
-      traction: 15,
-      investors: 5,
-      vision: 10,
-    },
-  });
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+// Helper function to get the preference ID when custom evaluation is enabled
+export async function getPreferenceId(): Promise<string | null> {
+  try {
+    const isEnabled = await isCustomEvaluationEnabled();
+    return isEnabled ? TEMP_FIRM_ID : null;
+  } catch (error) {
+    console.error("Failed to get preference ID:", error);
+    return null;
+  }
+}
 
-  const validateForm = () => {
-    const newErrors: { [key: string]: string } = {};
-
-    if (!formData.preference_name.trim()) {
-      newErrors.preference_name = "Filter name is required";
-    } else if (formData.preference_name.length > 50) {
-      newErrors.preference_name = "Name must be less than 50 characters";
-    }
-
-    if (!formData.custom_rules_text.trim()) {
-      newErrors.custom_rules_text = "Custom prompt is required";
-    } else if (formData.custom_rules_text.length > 500) {
-      newErrors.custom_rules_text =
-        "Custom prompt must be less than 500 characters";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    console.log(formData);
-    try {
-      const response = await fetch(`/api/preferences/${TEMP_FIRM_ID}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-
-        body: JSON.stringify({
-          preference_name: formData.preference_name.trim(),
-          custom_rules_text: formData.custom_rules_text.trim(),
-          weights: formData.weights,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || `HTTP error! status: ${response.status}`
-        );
-      }
-
-      const newPreference = await response.json();
-      console.log("Created preference:", newPreference);
-
-      toast({
-        title: "Success",
-        description: "Filter created successfully",
-      });
-
-      // Reset form
-      setFormData({
-        preference_name: "",
-        custom_rules_text: "",
-        weights: {
-          founders: 75,
-          market: 60,
-          product: 35,
-          traction: 15,
-          investors: 5,
-          vision: 10,
-        },
-      });
-      setErrors({});
-      setIsOpen(false);
-      onSuccess();
-    } catch (error) {
-      console.error("Failed to create filter:", error);
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Failed to create filter. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const updateField = (field: string, value: string) => {
-    setFormData({ ...formData, [field]: value });
-    if (errors[field]) {
-      setErrors({ ...errors, [field]: "" });
-    }
-  };
-
-  const updateDimension = (dimension: string, value: number[]) => {
-    const newValue = Math.round(value[0]);
-
-    setFormData({
-      ...formData,
-      weights: {
-        ...formData.weights,
-        [dimension]: newValue,
-      },
-    });
-  };
-
-  const resetToDefaults = () => {
-    setFormData({
-      ...formData,
-      weights: {
-        founders: 75,
-        market: 60,
-        product: 35,
-        traction: 15,
-        investors: 5,
-        vision: 10,
-      },
-    });
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Plus className="mr-2 h-4 w-4" />
-          Create Filter
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Create New Filter</DialogTitle>
-          <DialogDescription>
-            Set up a custom evaluation filter. Rate each dimension from 0-100
-            based on importance.
-            <br />
-            <span className="text-sm text-muted-foreground mt-1 block">
-              0 = Not important at all • 50 = Moderately important • 100 =
-              Extremely important
-            </span>
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-6 w-full">
-          <div className="space-y-2">
-            <Label htmlFor="name">Filter Name *</Label>
-            <Input
-              id="name"
-              value={formData.preference_name}
-              onChange={(e) => updateField("preference_name", e.target.value)}
-              placeholder="Enter filter name"
-              maxLength={50}
-              disabled={isSubmitting}
-            />
-            {errors.preference_name && (
-              <p className="text-sm text-red-600">{errors.preference_name}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="custom_prompt">Custom Prompt *</Label>
-            <Textarea
-              id="custom_prompt"
-              value={formData.custom_rules_text}
-              onChange={(e) => updateField("custom_rules_text", e.target.value)}
-              placeholder="Enter your custom evaluation prompt..."
-              maxLength={500}
-              disabled={isSubmitting}
-              rows={4}
-            />
-            <p className="text-xs text-muted-foreground">
-              {formData.custom_rules_text.length}/500 characters
-            </p>
-            {errors.custom_rules_text && (
-              <p className="text-sm text-red-600">{errors.custom_rules_text}</p>
-            )}
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label>Dimension Importance (0-100)</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={resetToDefaults}
-                disabled={isSubmitting}
-              >
-                Reset to Defaults
-              </Button>
-            </div>
-
-            {Object.entries(formData.weights).map(([dimension, value]) => (
-              <div key={dimension} className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <Label className="capitalize font-medium">{dimension}</Label>
-                  <span className="text-sm font-medium px-2 py-1 bg-muted rounded">
-                    {value}
-                  </span>
-                </div>
-                <Slider
-                  value={[value]}
-                  onValueChange={(newValue) =>
-                    updateDimension(dimension, newValue)
-                  }
-                  max={100}
-                  min={0}
-                  step={1}
-                  className="w-full"
-                  disabled={isSubmitting}
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Not Important</span>
-                  <span>Moderately Important</span>
-                  <span>Extremely Important</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsOpen(false)}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="animate-spin rounded-full h-4 w-4 mr-2" />
-                  Creating...
-                </>
-              ) : (
-                "Create Filter"
-              )}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
+interface Preference {
+  id?: string;
+  overall_custom_eval: string;
+  founders_custom_eval: string;
+  product_custom_eval: string;
+  market_custom_eval: string;
+  vision_custom_eval: string;
+  traction_custom_eval: string;
+  investors_custom_eval: string;
+  use_custom_eval?: boolean;
 }
 
 export function PreferenceSelector() {
   const [isOpen, setIsOpen] = useState(false);
-  const [preferences, setPreferences] = useState<Preference[]>([]);
-  const [selectedPreference, setSelectedPreference] = useState<string | null>(
-    null
-  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [preferences, setPreferences] = useState<Preference>({
+    id: undefined,
+    overall_custom_eval: "",
+    founders_custom_eval: "",
+    product_custom_eval: "",
+    market_custom_eval: "",
+    vision_custom_eval: "",
+    traction_custom_eval: "",
+    investors_custom_eval: "",
+    use_custom_eval: false,
+  });
 
   const fetchPreferences = async () => {
     setLoading(true);
-    setError(null);
-
     try {
       const response = await fetch(`/api/preferences/${TEMP_FIRM_ID}`, {
         method: "GET",
@@ -330,43 +94,56 @@ export function PreferenceSelector() {
         },
       });
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          // No preferences found, that's okay
-          setPreferences([]);
-          return;
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Fetched preferences:", data.preferences);
+        // Handle both old and new data structures
+        if (data) {
+          // Old structure - convert to new structure
+          const loadedPreferences = {
+            ...data.preferences,
+            id: data.preferences?.id || data.id,
+            use_custom_eval: data.preferences?.use_custom_eval ?? false,
+          };
+          setPreferences(loadedPreferences);
+
+          // Sync localStorage with loaded state
+          if (loadedPreferences.use_custom_eval && loadedPreferences.id) {
+            localStorage.setItem("selectedPreference", loadedPreferences.id);
+            console.log("Stored preference ID in localStorage:", loadedPreferences.id);
+          } else {
+            localStorage.removeItem("selectedPreference");
+          }
+        } else if (data.overall_custom_eval !== undefined) {
+          // New structure
+          const loadedPreferences = {
+            id: data.id,
+            overall_custom_eval: data.overall_custom_eval || "",
+            founders_custom_eval: data.founders_custom_eval || "",
+            product_custom_eval: data.product_custom_eval || "",
+            market_custom_eval: data.market_custom_eval || "",
+            vision_custom_eval: data.vision_custom_eval || "",
+            traction_custom_eval: data.traction_custom_eval || "",
+            investors_custom_eval: data.investors_custom_eval || "",
+            use_custom_eval: data.use_custom_eval ?? false,
+          };
+          setPreferences(loadedPreferences);
+
+          // Sync localStorage with loaded state
+          if (loadedPreferences.use_custom_eval && loadedPreferences.id) {
+            localStorage.setItem("selectedPreference", loadedPreferences.id);
+            console.log("Stored preference ID in localStorage:", loadedPreferences.id);
+          } else {
+            localStorage.removeItem("selectedPreference");
+          }
         }
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || `HTTP error! status: ${response.status}`
-        );
-      }
-
-      const data = await response.json();
-      console.log("Fetched preferences:", data);
-
-      // Handle API response with { preferences: [...] }
-      const preferencesArray = Array.isArray(data.preferences)
-        ? data.preferences
-        : Array.isArray(data)
-        ? data
-        : [];
-      setPreferences(preferencesArray);
-
-      // Load selected preference from localStorage
-      const savedSelected = localStorage.getItem("selectedPreference");
-      if (
-        savedSelected &&
-        preferencesArray.some((p: Preference) => p.id === savedSelected)
-      ) {
-        setSelectedPreference(savedSelected);
+      } else {
+        console.log("No preferences found or error:", response.status);
+        // Ensure localStorage is clean if no preferences found
+        localStorage.removeItem("selectedPreference");
       }
     } catch (error) {
       console.error("Failed to fetch preferences:", error);
-      setError(
-        error instanceof Error ? error.message : "Failed to load preferences"
-      );
-      setPreferences([]);
     } finally {
       setLoading(false);
     }
@@ -376,152 +153,412 @@ export function PreferenceSelector() {
     fetchPreferences();
   }, []);
 
-  const togglePreference = (preferenceId: string) => {
-    if (selectedPreference === preferenceId) {
-      // Deselect if already selected
-      setSelectedPreference(null);
-      localStorage.removeItem("selectedPreference");
-      toast({
-        title: "Filter Deselected",
-        description: "No filter is currently active",
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    console.log("Submitting preferences:", preferences);
+
+    try {
+      const response = await fetch(`/api/preferences/${TEMP_FIRM_ID}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(preferences),
       });
-    } else {
-      // Select new preference
-      setSelectedPreference(preferenceId);
-      localStorage.setItem("selectedPreference", preferenceId);
-      const preference = preferences.find((p) => p.id === preferenceId);
+
+      console.log("Response status:", response.status);
+      const responseText = await response.text();
+      console.log("Response text:", responseText);
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = JSON.parse(responseText);
+        } catch {
+          errorData = { error: responseText };
+        }
+        console.error("Error response:", errorData);
+        throw new Error(
+          errorData.error || errorData.message || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      let result: any = null;
+      try {
+        result = JSON.parse(responseText);
+        // Update the preference ID if it's returned from the API
+        if (result?.id) {
+          setPreferences(prev => ({ ...prev, id: result.id }));
+          // Update localStorage if custom evaluations are enabled
+          if (preferences.use_custom_eval) {
+            localStorage.setItem("selectedPreference", result.id);
+            console.log("Updated preference ID from save response:", result.id);
+          }
+        }
+      } catch {
+        result = { success: true };
+      }
+      console.log("Success response:", result);
+
       toast({
-        title: "Filter Selected",
-        description: `"${preference?.preference_name}" will be used for evaluations`,
+        title: "Success",
+        description: "Evaluation criteria saved successfully",
+      });
+
+      setIsOpen(false);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Failed to save preferences:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to save evaluation criteria. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const updatePreference = (field: keyof Preference, value: string | boolean) => {
+    setPreferences({ ...preferences, [field]: value });
+  };
+
+  const handleCheckboxChange = async (checked: boolean) => {
+    const updatedPreferences = { ...preferences, use_custom_eval: checked };
+    setPreferences(updatedPreferences);
+
+    // Update localStorage based on checkbox state
+    if (checked && preferences.id) {
+      localStorage.setItem("selectedPreference", preferences.id);
+      console.log("Custom evaluations enabled, stored preference ID in localStorage:", preferences.id);
+    } else {
+      localStorage.removeItem("selectedPreference");
+      console.log("Custom evaluations disabled, removed preference ID from localStorage");
+    }
+
+    // Auto-save the checkbox state
+    try {
+      const response = await fetch(`/api/preferences/${TEMP_FIRM_ID}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(updatedPreferences),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Get the response data to update the preference ID if needed
+      const responseText = await response.text();
+      let result: any = null;
+      try {
+        result = JSON.parse(responseText);
+        // Update the preference ID if it's returned from the API
+        if (result?.id && checked) {
+          setPreferences(prev => ({ ...prev, id: result.id }));
+          localStorage.setItem("selectedPreference", result.id);
+          console.log("Updated preference ID from API response:", result.id);
+        }
+      } catch {
+        // Response might not be JSON, that's okay
+      }
+
+      toast({
+        title: "Success",
+        description: `Custom evaluations ${checked ? "enabled" : "disabled"}`,
+      });
+    } catch (error) {
+      console.error("Failed to save checkbox state:", error);
+      // Revert the checkbox if save failed
+      setPreferences(preferences);
+      // Revert localStorage as well
+      if (checked) {
+        localStorage.removeItem("selectedPreference");
+      } else if (preferences.id) {
+        localStorage.setItem("selectedPreference", preferences.id);
+      }
+      toast({
+        title: "Error",
+        description: "Failed to save setting. Please try again.",
+        variant: "destructive",
       });
     }
   };
 
-  const refreshPreferences = () => {
-    fetchPreferences();
-  };
-
-  const getActiveFilterName = () => {
-    if (!selectedPreference) return null;
-    return preferences.find((p) => p.id === selectedPreference)
-      ?.preference_name;
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center gap-2">
-          <Settings className="h-4 w-4" />
-          {getActiveFilterName() ? (
-            <span className="truncate max-w-[120px]">
-              {getActiveFilterName()}
-            </span>
-          ) : (
-            "Filters"
-          )}
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            Evaluation Filters
-          </DialogTitle>
-          <DialogDescription>
-            Select or create a filter to customize how applications are
-            evaluated
-          </DialogDescription>
-        </DialogHeader>
+    <div className="flex items-center space-x-4">
+      {/* Custom Evaluation Toggle */}
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id="use-custom-eval-main"
+          checked={preferences.use_custom_eval || false}
+          onCheckedChange={handleCheckboxChange}
+          disabled={loading}
+        />
+        <Label htmlFor="use-custom-eval-main" className="text-sm font-medium cursor-pointer">
+          Use Custom Evals
+        </Label>
+      </div>
 
-        <div className="space-y-4 w-full">
-          {error ? (
-            <div className="text-sm text-red-600 flex items-center gap-2 p-3 bg-red-50 rounded-lg w-full">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span className="flex-1 break-words">{error}</span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={refreshPreferences}
-                disabled={loading}
-                className="ml-auto shrink-0"
-              >
-                {loading ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  "Retry"
-                )}
-              </Button>
-            </div>
-          ) : loading ? (
+      {/* Settings Dialog */}
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Custom Evals
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Custom Evaluation Criteria
+            </DialogTitle>
+            <DialogDescription>
+              {isEditing
+                ? "Edit your custom evaluation criteria for each dimension."
+                : "View your custom evaluation criteria for each dimension. Click Edit to make changes."
+              }
+            </DialogDescription>
+          </DialogHeader>
+
+          {loading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Loading filters...
+              Loading preferences...
             </div>
-          ) : preferences.length === 0 ? (
-            <div className="text-center py-6">
-              <Settings className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground mb-4">
-                No filters created yet. Create your first filter to get started.
-              </p>
-              <CreateFilterModal onSuccess={refreshPreferences} />
+          ) : !isEditing ? (
+            // Read-only view
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">
+                  Overall Evaluation Criteria
+                </Label>
+                <div className="p-3 bg-gray-50 border rounded-md text-sm">
+                  {preferences.overall_custom_eval || "No criteria defined yet."}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">
+                    Founders & Team
+                  </Label>
+                  <div className="p-3 bg-gray-50 border rounded-md text-sm">
+                    {preferences.founders_custom_eval || "No criteria defined yet."}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">
+                    Product & Technology
+                  </Label>
+                  <div className="p-3 bg-gray-50 border rounded-md text-sm">
+                    {preferences.product_custom_eval || "No criteria defined yet."}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">
+                    Market & Opportunity
+                  </Label>
+                  <div className="p-3 bg-gray-50 border rounded-md text-sm">
+                    {preferences.market_custom_eval || "No criteria defined yet."}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">
+                    Vision & Strategy
+                  </Label>
+                  <div className="p-3 bg-gray-50 border rounded-md text-sm">
+                    {preferences.vision_custom_eval || "No criteria defined yet."}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">
+                    Traction & Metrics
+                  </Label>
+                  <div className="p-3 bg-gray-50 border rounded-md text-sm">
+                    {preferences.traction_custom_eval || "No criteria defined yet."}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">
+                    Existing Investors
+                  </Label>
+                  <div className="p-3 bg-gray-50 border rounded-md text-sm">
+                    {preferences.investors_custom_eval || "No criteria defined yet."}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Close
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Settings className="h-4 w-4" />
+                  Edit
+                </Button>
+              </div>
             </div>
           ) : (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Available Filters</span>
-                <CreateFilterModal onSuccess={refreshPreferences} />
-              </div>
-
+            // Edit form
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                {preferences.map((preference, idx) => (
-                  <div
-                    key={`${preference.id}-${idx}`}
-                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                      selectedPreference === preference.id
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                    onClick={() => togglePreference(preference.id)}
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex-1 min-w-0 pr-2">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm truncate">
-                            {preference.preference_name}
-                          </span>
-                          {selectedPreference === preference.id && (
-                            <Check className="h-4 w-4 text-primary shrink-0" />
-                          )}
-                        </div>
-                        {preference.custom_rules_text && (
-                          <p className="text-xs text-muted-foreground mt-1 break-words">
-                            {preference.custom_rules_text}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                <Label htmlFor="overall" className="text-sm font-medium">
+                  Overall Evaluation Criteria
+                </Label>
+                <Textarea
+                  id="overall"
+                  placeholder="Describe your overall evaluation approach and what matters most to you across all dimensions..."
+                  value={preferences.overall_custom_eval}
+                  onChange={(e) => updatePreference("overall_custom_eval", e.target.value)}
+                  disabled={isSubmitting}
+                  rows={3}
+                  className=""
+                />
               </div>
 
-              {selectedPreference && (
-                <div className="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-lg w-full">
-                  <p className="text-sm text-primary font-medium break-words">
-                    Active Filter:{" "}
-                    {
-                      preferences.find((p) => p.id === selectedPreference)
-                        ?.preference_name
-                    }
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1 break-words">
-                    This filter will be used for all application evaluations
-                  </p>
+              <div className="">
+                <div className="space-y-2">
+                  <Label htmlFor="founders" className="text-sm font-medium">
+                    Founders & Team
+                  </Label>
+                  <Textarea
+                    id="founders"
+                    placeholder="What do you look for in founders? Experience, domain expertise, track record..."
+                    value={preferences.founders_custom_eval}
+                    onChange={(e) => updatePreference("founders_custom_eval", e.target.value)}
+                    disabled={isSubmitting}
+                    rows={3}
+                    className="h-24"
+                  />
                 </div>
-              )}
-            </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="product" className="text-sm font-medium">
+                    Product & Technology
+                  </Label>
+                  <Textarea
+                    id="product"
+                    placeholder="Product quality, innovation, technical differentiation, user experience..."
+                    value={preferences.product_custom_eval}
+                    onChange={(e) => updatePreference("product_custom_eval", e.target.value)}
+                    disabled={isSubmitting}
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="market" className="text-sm font-medium">
+                    Market & Opportunity
+                  </Label>
+                  <Textarea
+                    id="market"
+                    placeholder="Market size, growth potential, competitive landscape, timing..."
+                    value={preferences.market_custom_eval}
+                    onChange={(e) => updatePreference("market_custom_eval", e.target.value)}
+                    disabled={isSubmitting}
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="vision" className="text-sm font-medium">
+                    Vision & Strategy
+                  </Label>
+                  <Textarea
+                    id="vision"
+                    placeholder="Long-term vision, strategic thinking, scalability, business model..."
+                    value={preferences.vision_custom_eval}
+                    onChange={(e) => updatePreference("vision_custom_eval", e.target.value)}
+                    disabled={isSubmitting}
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="traction" className="text-sm font-medium">
+                    Traction & Metrics
+                  </Label>
+                  <Textarea
+                    id="traction"
+                    placeholder="Revenue growth, user metrics, partnerships, market validation..."
+                    value={preferences.traction_custom_eval}
+                    onChange={(e) => updatePreference("traction_custom_eval", e.target.value)}
+                    disabled={isSubmitting}
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="investors" className="text-sm font-medium">
+                    Existing Investors
+                  </Label>
+                  <Textarea
+                    id="investors"
+                    placeholder="Quality of existing investors, valuation, funding history, investor alignment..."
+                    value={preferences.investors_custom_eval}
+                    onChange={(e) => updatePreference("investors_custom_eval", e.target.value)}
+                    disabled={isSubmitting}
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditing(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
           )}
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

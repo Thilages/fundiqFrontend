@@ -49,52 +49,15 @@ export async function POST(
   { params }: { params: { firm_id: string } }
 ) {
   try {
-    const { firm_id } = params;
+    const { firm_id } = await params;
     const body = await request.json();
 
     // Validate required fields
-    if (!body.preference_name || !body.custom_rules_text || !body.weights) {
-      return NextResponse.json(
-        {
-          error:
-            "Missing required fields: preference_name, custom_rules_text, and weights are required",
-        },
-        { status: 400 }
-      );
-    }
+    
 
     // Validate weights structure
-    const requiredDimensions = [
-      "founders",
-      "product",
-      "market",
-      "vision",
-      "traction",
-      "investors",
-    ];
-    const providedDimensions = Object.keys(body.weights);
-
-    if (!requiredDimensions.every((dim) => providedDimensions.includes(dim))) {
-      return NextResponse.json(
-        {
-          error:
-            "Invalid weights structure. Required: founders, product, market, vision, traction, investors",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Validate weight values are numbers between 0-100
-    for (const [key, value] of Object.entries(body.weights)) {
-      if (typeof value !== "number" || value < 0 || value > 100) {
-        return NextResponse.json(
-          {
-            error: `Invalid weight value for ${key}. Must be a number between 0-100`,
-          },
-          { status: 400 }
-        );
-      }
-    }
+    
+    
 
     const apiUrl = API_BASE_URL;
     const response = await fetch(`${apiUrl}/vc-firms/${firm_id}/preferences`, {
@@ -103,11 +66,7 @@ export async function POST(
         Accept: "application/json",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        preference_name: body.preference_name.trim(),
-        custom_rules_text: body.custom_rules_text.trim(),
-        weights: body.weights,
-      }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {

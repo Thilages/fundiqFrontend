@@ -114,7 +114,7 @@ export function IssuesSection({ issues, isLoading = false }: IssuesSectionProps)
       <CardContent>
         <div className="space-y-6">
           {categoriesWithIssues.map((category, categoryIndex) => {
-            const isExpanded = expandedCategories[categoryIndex] ?? true; // Default to expanded
+            const isExpanded = expandedCategories[categoryIndex]; // Default to expanded
 
             return (
               <div key={categoryIndex} className="space-y-3">
@@ -147,7 +147,7 @@ export function IssuesSection({ issues, isLoading = false }: IssuesSectionProps)
                 {isExpanded && (
                   <div className="space-y-3 ml-4">
                     {category.issues.map((issue, index) => (
-                      <Alert key={index} variant={category.variant}>
+                      <Alert key={index} variant="destructive">
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle>Action Required</AlertTitle>
                         <AlertDescription>{issue}</AlertDescription>

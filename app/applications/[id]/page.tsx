@@ -201,7 +201,13 @@ export default function ApplicationDetailPage({
             <RawDataSection initialData={app.raw} onSave={handleSaveRawData} />
           </TabsContent>
           <TabsContent value="notes">
-            <IssuesSection issues={app.issues || []} />
+            <IssuesSection
+              issues={
+                app.issues && typeof app.issues === "object" && !Array.isArray(app.issues)
+                  ? app.issues
+                  : { enrichment_issues: [], evaluation_issues: [], extraction_issues: [] }
+              }
+            />
           </TabsContent>
         </Tabs>
       </div>

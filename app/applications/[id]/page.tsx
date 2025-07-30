@@ -190,9 +190,11 @@ export default function ApplicationDetailPage({
 
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="overview">Overview & Scores</TabsTrigger>
-            <TabsTrigger value="enriched">Enriched Data</TabsTrigger>
             <TabsTrigger value="raw">Raw Extracted Data</TabsTrigger>
+            <TabsTrigger value="enriched">Enriched Data</TabsTrigger>
+            <TabsTrigger value="overview">Overview & Scores</TabsTrigger>
+            
+            
             <TabsTrigger value="notes">
               Issues & Actions
               {unresolvedIssuesCount > 0 && (

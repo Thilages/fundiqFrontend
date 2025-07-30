@@ -505,7 +505,7 @@ export default function Dashboard() {
           </h2>
         </div>
         <div className="flex items-center space-x-4 flex-shrink-0">
-          <AddNewApplicationModal onSuccess={() => window.location.reload()} />
+          {/* <AddNewApplicationModal onSuccess={() => window.location.reload()} /> */}
           <PreferenceSelector />
         </div>
       </div>
@@ -547,7 +547,7 @@ export default function Dashboard() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics.submitted}</div>
+            <div className="text-2xl font-bold">{metrics.total - metrics.completed}</div>
             <p className="text-xs text-muted-foreground">Awaiting evaluation</p>
           </CardContent>
         </Card>

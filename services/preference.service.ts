@@ -111,6 +111,10 @@ export class PreferenceService extends BaseService {
    */
   static updateLocalStorage(preferences: Preference, enabled: boolean): void {
     if (typeof window !== "undefined") {
+      // Store the checkbox state
+      localStorage.setItem("useCustomEvals", JSON.stringify(enabled));
+      console.log("Stored use custom evals state in localStorage:", enabled);
+
       if (enabled && preferences.id) {
         localStorage.setItem("selectedPreference", preferences.id);
         console.log("Stored preference ID in localStorage:", preferences.id);
@@ -119,6 +123,27 @@ export class PreferenceService extends BaseService {
         console.log("Removed preference ID from localStorage");
       }
     }
+  }
+
+  /**
+   * Get the use custom evals state from localStorage
+   */
+  static getUseCustomEvalsFromStorage(): boolean {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("useCustomEvals");
+      if (stored !== null) {
+        try {
+          return JSON.parse(stored);
+        } catch (error) {
+          console.error(
+            "Failed to parse useCustomEvals from localStorage:",
+            error
+          );
+          return false;
+        }
+      }
+    }
+    return false;
   }
 
   /**

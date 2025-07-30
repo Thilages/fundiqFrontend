@@ -39,6 +39,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 import { ApplicationService } from "@/services";
 
@@ -387,9 +398,48 @@ export function AppSidebar() {
     fetchApplications();
   };
 
-  const handleLogout = () => {
-    // Implement your logout logic here
-    console.log("Logout action triggered");
+  const handleLogout = async () => {
+    try {
+      // Get JWT token from localStorage or wherever it's stored
+      const token = localStorage.getItem('authToken') || localStorage.getItem('jwt_token');
+
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+      });
+
+      if (response.ok) {
+        // Clear all localStorage data
+        localStorage.clear();
+
+        toast({
+          title: "Success",
+          description: "Logged out successfully",
+        });
+
+        // Redirect to login page
+        window.location.href = '/login';
+      } else {
+        // Even if the API call fails, clear localStorage and redirect
+        localStorage.clear();
+        window.location.href = '/login';
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+
+      // Even if there's an error, clear localStorage and redirect
+      localStorage.clear();
+      toast({
+        title: "Warning",
+        description: "Logged out locally. Please ensure you're fully logged out.",
+        variant: "destructive",
+      });
+      window.location.href = '/login';
+    }
   };
 
   return (
@@ -489,14 +539,31 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t mt-auto">
-        <Button
-          variant="ghost"
-          className="w-full h-10 justify-start text-muted-foreground hover:text-foreground"
-          onClick={handleLogout}
-        >
-          <LogOut className="h-4 w-4 mr-3" />
-          <span className="text-sm font-medium">Logout</span>
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full h-10 justify-start text-muted-foreground hover:text-foreground"
+            >
+              <LogOut className="h-4 w-4 mr-3" />
+              <span className="text-sm font-medium">Logout</span>
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to logout? You will need to sign in again to access your account.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleLogout}>
+                Logout
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </SidebarFooter>
     </Sidebar>
   );

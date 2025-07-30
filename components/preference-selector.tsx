@@ -81,12 +81,27 @@ export function PreferenceSelector() {
           };
         }
 
+        // If no server preference for use_custom_eval, check localStorage
+        if (loadedPreferences.use_custom_eval === false) {
+          const storedState = PreferenceService.getUseCustomEvalsFromStorage();
+          if (storedState) {
+            loadedPreferences.use_custom_eval = storedState;
+          }
+        }
+
         setPreferences(loadedPreferences);
 
         // Sync localStorage with loaded state
         PreferenceService.updateLocalStorage(loadedPreferences, loadedPreferences.use_custom_eval || false);
       } else {
         console.log("No preferences found or error:", result.error);
+
+        // Check localStorage for checkbox state even if no server preferences
+        const storedCheckboxState = PreferenceService.getUseCustomEvalsFromStorage();
+        if (storedCheckboxState) {
+          setPreferences(prev => ({ ...prev, use_custom_eval: storedCheckboxState }));
+        }
+
         // Ensure localStorage is clean if no preferences found
         if (typeof window !== 'undefined') {
           localStorage.removeItem("selectedPreference");
@@ -94,6 +109,12 @@ export function PreferenceSelector() {
       }
     } catch (error) {
       console.error("Failed to fetch preferences:", error);
+
+      // Check localStorage for checkbox state even if fetch failed
+      const storedCheckboxState = PreferenceService.getUseCustomEvalsFromStorage();
+      if (storedCheckboxState) {
+        setPreferences(prev => ({ ...prev, use_custom_eval: storedCheckboxState }));
+      }
     } finally {
       setLoading(false);
     }

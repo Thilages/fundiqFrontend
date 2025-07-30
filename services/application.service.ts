@@ -131,7 +131,7 @@ export class ApplicationService extends BaseService {
   ): Promise<ApiResponse<ApplicationDetail>> {
     console.log("🔍 Updating application:", id);
 
-    const result = await this.put<ApplicationDetail>(
+    const result = await this.patch<ApplicationDetail>(
       `/api/application/${id}`,
       applicationData
     );

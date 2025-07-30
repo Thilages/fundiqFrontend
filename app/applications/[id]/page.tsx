@@ -70,7 +70,12 @@ export default function ApplicationDetailPage({
         throw new Error(result.error || "Failed to save");
       }
 
+      // Update local state immediately for responsiveness
       setApp((prev) => (prev ? { ...prev, raw: updatedRaw } : null));
+
+      // Fetch fresh data from server to ensure consistency
+      fetchData();
+
       toast({ title: "Success", description: "Raw data updated successfully" });
     } catch (error) {
       toast({
@@ -193,8 +198,8 @@ export default function ApplicationDetailPage({
             <TabsTrigger value="raw">Raw Extracted Data</TabsTrigger>
             <TabsTrigger value="enriched">Enriched Data</TabsTrigger>
             <TabsTrigger value="overview">Overview & Scores</TabsTrigger>
-            
-            
+
+
             <TabsTrigger value="notes">
               Issues & Actions
               {unresolvedIssuesCount > 0 && (

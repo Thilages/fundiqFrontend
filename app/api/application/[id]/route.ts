@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { API_BASE_URL } from "@/lib/config"
+import { type NextRequest, NextResponse } from "next/server";
+import { API_BASE_URL } from "@/lib/config";
 
 // Mock detailed application data for multiple applications
 const mockApplicationDetails: { [key: string]: any } = {
@@ -19,7 +19,8 @@ const mockApplicationDetails: { [key: string]: any } = {
         id: "issue-1",
         type: "warning",
         category: "Market",
-        description: "Missing TAM/SAM data in market section - requires manual verification",
+        description:
+          "Missing TAM/SAM data in market section - requires manual verification",
         status: "open",
         created_at: "2024-01-16T09:15:00Z",
       },
@@ -123,11 +124,13 @@ const mockApplicationDetails: { [key: string]: any } = {
         advisors: [
           {
             name: "VENU NAIR",
-            background: "Former COO at RMSI Group, Former Chief Strategy Officer at Safe Security",
+            background:
+              "Former COO at RMSI Group, Former Chief Strategy Officer at Safe Security",
           },
           {
             name: "GAURAV BATRA",
-            background: "Co-Founder at Semaai, Backed by Sequoia Surge & Beenext",
+            background:
+              "Co-Founder at Semaai, Backed by Sequoia Surge & Beenext",
           },
         ],
         co_investors: [],
@@ -137,7 +140,8 @@ const mockApplicationDetails: { [key: string]: any } = {
         som: "$1.1B",
         tam: "$256B",
         target_geography: "null",
-        problem_statement: "Cybersecurity Trust Gaps exists on many levels across the corporate ecosystem.",
+        problem_statement:
+          "Cybersecurity Trust Gaps exists on many levels across the corporate ecosystem.",
         regulatory_domain: [],
         competitive_landscape: "null",
       },
@@ -177,15 +181,19 @@ const mockApplicationDetails: { [key: string]: any } = {
         confidence: 92,
       },
       vision: {
-        vision: "Become the single point of truth for cyber risk management in organizations",
-        mission: "To empower risk owners to make informed cyber risk decisions through data-driven insights",
-        summary: "Zeron positions itself as an integrated cyber risk command center.",
+        vision:
+          "Become the single point of truth for cyber risk management in organizations",
+        mission:
+          "To empower risk owners to make informed cyber risk decisions through data-driven insights",
+        summary:
+          "Zeron positions itself as an integrated cyber risk command center.",
         confidence: 95,
       },
       product: {
         summary: "Architected as cloud-native SaaS with API-first design.",
         confidence: 89,
-        description: "AI-powered Cyber Risk Posture Management (CRPM) platform with modular capabilities.",
+        description:
+          "AI-powered Cyber Risk Posture Management (CRPM) platform with modular capabilities.",
         is_scalable: true,
       },
       founders: [
@@ -199,7 +207,11 @@ const mockApplicationDetails: { [key: string]: any } = {
       traction: {
         revenue: "Disclosed: $70,700 (2023), Projected: $1.2M ARR (2025)",
         growth_rate: "200% YoY (Claimed)",
-        current_customers: ["Aditya Birla Sunlife AMC", "Finova Capital", "Spandana Sphoorty Financial"],
+        current_customers: [
+          "Aditya Birla Sunlife AMC",
+          "Finova Capital",
+          "Spandana Sphoorty Financial",
+        ],
         confidence: 85,
       },
       investors: {
@@ -284,7 +296,8 @@ const mockApplicationDetails: { [key: string]: any } = {
         som: "$2.3B",
         tam: "$180B",
         target_geography: "North America",
-        problem_statement: "Traditional banking systems lack modern digital payment solutions for SMEs.",
+        problem_statement:
+          "Traditional banking systems lack modern digital payment solutions for SMEs.",
         regulatory_domain: ["PCI DSS", "SOX"],
         competitive_landscape: "Stripe, Square, PayPal",
       },
@@ -292,14 +305,18 @@ const mockApplicationDetails: { [key: string]: any } = {
         vision: "Democratize financial services for small businesses",
         mission: "Enable seamless digital payments for every business",
         differentiation: "AI-powered fraud detection with 99.9% accuracy",
-        resilience_signal: "Diversified revenue streams across multiple verticals",
+        resilience_signal:
+          "Diversified revenue streams across multiple verticals",
       },
       product: {
         tech_stack: ["Node.js", "React", "PostgreSQL", "AWS"],
-        description: "Comprehensive payment processing platform with integrated accounting and analytics.",
+        description:
+          "Comprehensive payment processing platform with integrated accounting and analytics.",
         is_scalable: true,
-        innovation_or_ip: "Patent pending on real-time fraud detection algorithm",
-        product_market_fit: "Strong PMF evidenced by 40% month-over-month growth",
+        innovation_or_ip:
+          "Patent pending on real-time fraud detection algorithm",
+        product_market_fit:
+          "Strong PMF evidenced by 40% month-over-month growth",
       },
       founders: [
         {
@@ -326,10 +343,17 @@ const mockApplicationDetails: { [key: string]: any } = {
         users: 1250,
         revenue: 125000,
         growth_rate: "40% MoM",
-        current_customers: ["Local Coffee Co", "Tech Startup Inc", "Retail Plus"],
+        current_customers: [
+          "Local Coffee Co",
+          "Tech Startup Inc",
+          "Retail Plus",
+        ],
       },
       investors: {
-        advisors: ["John Smith - Former PayPal VP", "Lisa Wong - Fintech Expert"],
+        advisors: [
+          "John Smith - Former PayPal VP",
+          "Lisa Wong - Fintech Expert",
+        ],
         co_investors: ["Seed Fund Alpha", "Angel Network Beta"],
       },
     },
@@ -344,8 +368,10 @@ const mockApplicationDetails: { [key: string]: any } = {
         confidence: 88,
       },
       vision: {
-        vision: "Become the leading payment infrastructure for small and medium businesses globally",
-        mission: "Simplify financial operations for businesses through intelligent automation",
+        vision:
+          "Become the leading payment infrastructure for small and medium businesses globally",
+        mission:
+          "Simplify financial operations for businesses through intelligent automation",
         summary:
           "Clear vision with strong market positioning. Differentiation through AI-powered features creates competitive moat.",
         confidence: 92,
@@ -373,14 +399,20 @@ const mockApplicationDetails: { [key: string]: any } = {
         },
       ],
       traction: {
-        revenue: "Strong revenue growth: $125K ARR with 40% month-over-month growth trajectory",
-        growth_rate: "Exceptional growth metrics indicating strong product-market fit",
-        current_customers: "Diversified customer base across multiple business verticals",
+        revenue:
+          "Strong revenue growth: $125K ARR with 40% month-over-month growth trajectory",
+        growth_rate:
+          "Exceptional growth metrics indicating strong product-market fit",
+        current_customers:
+          "Diversified customer base across multiple business verticals",
         confidence: 93,
       },
       investors: {
-        summary: "Strong advisory team with relevant fintech expertise and established investor backing",
-        advisors: ["John Smith - Former PayPal VP with 15+ years fintech experience"],
+        summary:
+          "Strong advisory team with relevant fintech expertise and established investor backing",
+        advisors: [
+          "John Smith - Former PayPal VP with 15+ years fintech experience",
+        ],
         confidence: 85,
       },
     },
@@ -419,7 +451,8 @@ const mockApplicationDetails: { [key: string]: any } = {
         som: "$1.8B",
         tam: "$120B",
         target_geography: "US, EU",
-        problem_statement: "Healthcare diagnosis inefficiencies lead to delayed treatment and higher costs.",
+        problem_statement:
+          "Healthcare diagnosis inefficiencies lead to delayed treatment and higher costs.",
         regulatory_domain: ["FDA", "HIPAA", "GDPR"],
         competitive_landscape: "IBM Watson Health, Google Health AI",
       },
@@ -430,7 +463,8 @@ const mockApplicationDetails: { [key: string]: any } = {
       market: {
         tam: "Global healthcare AI market expected to reach $120B by 2028",
         sam: "Medical imaging AI segment valued at $25B",
-        summary: "Large and rapidly growing market with clear regulatory pathway and strong demand drivers.",
+        summary:
+          "Large and rapidly growing market with clear regulatory pathway and strong demand drivers.",
         confidence: 90,
       },
       // ... other dimensions
@@ -443,112 +477,135 @@ const mockApplicationDetails: { [key: string]: any } = {
       dimensions: {
         founders: {
           score: 9.2,
-          summary: "World-class medical expertise with proven track record in healthcare innovation.",
+          summary:
+            "World-class medical expertise with proven track record in healthcare innovation.",
           confidence: 95,
         },
         market: {
           score: 8.5,
-          summary: "Large healthcare AI market with strong growth drivers and clear demand.",
+          summary:
+            "Large healthcare AI market with strong growth drivers and clear demand.",
           confidence: 90,
         },
         product: {
           score: 8.8,
-          summary: "Clinically validated AI platform with clear FDA approval pathway and strong IP.",
+          summary:
+            "Clinically validated AI platform with clear FDA approval pathway and strong IP.",
           confidence: 92,
         },
         traction: {
           score: 7.2,
-          summary: "Strong pilot results with major health systems, revenue generation starting.",
+          summary:
+            "Strong pilot results with major health systems, revenue generation starting.",
           confidence: 85,
         },
         vision: {
           score: 8.0,
-          summary: "Clear vision for transforming healthcare diagnosis with measurable impact goals.",
+          summary:
+            "Clear vision for transforming healthcare diagnosis with measurable impact goals.",
           confidence: 88,
         },
         investors: {
           score: 7.8,
-          summary: "Strong healthcare-focused investors with relevant expertise and network.",
+          summary:
+            "Strong healthcare-focused investors with relevant expertise and network.",
           confidence: 87,
         },
       },
     },
   },
-}
+};
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     // Get JWT token from cookie
-    const jwtToken = request.cookies.get('jwt_token')?.value;
+    const jwtToken = request.cookies.get("jwt_token")?.value;
 
     if (!jwtToken) {
       return NextResponse.json(
-        { error: 'Authentication required' },
+        { error: "Authentication required" },
         { status: 401 }
       );
     }
-    const { id } = params
+    const { id } = params;
 
     // Get client IP address
-    const forwardedFor = request.headers.get('x-forwarded-for');
-    const realIp = request.headers.get('x-real-ip');
-    const remoteAddress = forwardedFor?.split(',')[0] || realIp || 'unknown';
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const realIp = request.headers.get("x-real-ip");
+    const remoteAddress = forwardedFor?.split(",")[0] || realIp || "unknown";
 
-    const apiUrl = API_BASE_URL
+    const apiUrl = API_BASE_URL;
     const response = await fetch(`${apiUrl}/applications/${id}`, {
       cache: "no-store",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        'Authorization': `Bearer ${jwtToken}`,
-        'X-Forwarded-For': remoteAddress,
+        Authorization: `Bearer ${jwtToken}`,
+        "X-Forwarded-For": remoteAddress,
       },
-    })
+    });
 
     if (!response.ok) {
       if (response.status === 404) {
-        return NextResponse.json({ error: "Application not found" }, { status: 404 })
+        return NextResponse.json(
+          { error: "Application not found" },
+          { status: 404 }
+        );
       }
-      console.error(`Backend API returned ${response.status}: ${response.statusText}`)
-      return NextResponse.json({ error: "Failed to fetch application" }, { status: response.status })
+      console.error(
+        `Backend API returned ${response.status}: ${response.statusText}`
+      );
+      return NextResponse.json(
+        { error: "Failed to fetch application" },
+        { status: response.status }
+      );
     }
 
-    const application = await response.json()
-    return NextResponse.json(application)
+    const application = await response.json();
+    return NextResponse.json(application);
   } catch (error) {
-    console.error(`Error in /api/application/${params.id}:`, error)
-    return NextResponse.json({ error: "Failed to fetch application" }, { status: 500 })
+    console.error(`Error in /api/application/${params.id}:`, error);
+    return NextResponse.json(
+      { error: "Failed to fetch application" },
+      { status: 500 }
+    );
   }
 }
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     // Get JWT token from cookie
-    const jwtToken = request.cookies.get('jwt_token')?.value;
+    const jwtToken = request.cookies.get("jwt_token")?.value;
 
     if (!jwtToken) {
       return NextResponse.json(
-        { error: 'Authentication required' },
+        { error: "Authentication required" },
         { status: 401 }
       );
     }
 
-    const { id } = params
-    const { searchParams } = new URL(request.url)
-    const action = searchParams.get("action")
-    const preferencesId = searchParams.get("preferences_id")
-    
+    const { id } = params;
+    const { searchParams } = new URL(request.url);
+    const action = searchParams.get("action");
+    const preferencesId = searchParams.get("preferences_id");
+
     if (!action) {
       return NextResponse.json(
-        { error: 'Action parameter is required' },
+        { error: "Action parameter is required" },
         { status: 400 }
       );
     }
 
     // Get client IP address
-    const forwardedFor = request.headers.get('x-forwarded-for');
-    const realIp = request.headers.get('x-real-ip');
-    const remoteAddress = forwardedFor?.split(',')[0] || realIp || 'unknown';
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const realIp = request.headers.get("x-real-ip");
+    const remoteAddress = forwardedFor?.split(",")[0] || realIp || "unknown";
 
     // Build the API URL with query parameters
     let apiUrl = `${API_BASE_URL}/applications/${id}?action=${action}`;
@@ -561,80 +618,161 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        'Authorization': `Bearer ${jwtToken}`,
-        'X-Forwarded-For': remoteAddress,
+        Authorization: `Bearer ${jwtToken}`,
+        "X-Forwarded-For": remoteAddress,
       },
-    })
+    });
 
     if (!response.ok) {
-      console.error(`Backend API returned ${response.status}: ${response.statusText}`)
-      return NextResponse.json({ 
-        error: `Failed to trigger ${action}` 
-      }, { status: response.status })
+      console.error(
+        `Backend API returned ${response.status}: ${response.statusText}`
+      );
+      return NextResponse.json(
+        {
+          error: `Failed to trigger ${action}`,
+        },
+        { status: response.status }
+      );
     }
 
-    const result = await response.json()
-    return NextResponse.json(result)
+    const result = await response.json();
+    return NextResponse.json(result);
   } catch (error) {
-    console.error(`Error in POST /api/application/${params.id}:`, error)
-    return NextResponse.json({ error: "Failed to trigger action" }, { status: 500 })
+    console.error(`Error in POST /api/application/${params.id}:`, error);
+    return NextResponse.json(
+      { error: "Failed to trigger action" },
+      { status: 500 }
+    );
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     // Get JWT token from cookie
-    const jwtToken = request.cookies.get('jwt_token')?.value;
+    const jwtToken = request.cookies.get("jwt_token")?.value;
 
     if (!jwtToken) {
       return NextResponse.json(
-        { error: 'Authentication required' },
+        { error: "Authentication required" },
         { status: 401 }
       );
     }
 
-    const { id } = params
-    
+    const { id } = params;
+
     // Get client IP address
-    const forwardedFor = request.headers.get('x-forwarded-for');
-    const realIp = request.headers.get('x-real-ip');
-    const remoteAddress = forwardedFor?.split(',')[0] || realIp || 'unknown';
-    
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const realIp = request.headers.get("x-real-ip");
+    const remoteAddress = forwardedFor?.split(",")[0] || realIp || "unknown";
+
     // Check if the request contains FormData (for file uploads) or JSON
-    const contentType = request.headers.get('content-type') || '';
+    const contentType = request.headers.get("content-type") || "";
     let body: any;
     let headers: Record<string, string> = {
       Accept: "application/json",
-      'Authorization': `Bearer ${jwtToken}`,
-      'X-Forwarded-For': remoteAddress,
+      Authorization: `Bearer ${jwtToken}`,
+      "X-Forwarded-For": remoteAddress,
     };
 
-    if (contentType.includes('multipart/form-data')) {
+    if (contentType.includes("multipart/form-data")) {
       // Handle file upload
       body = await request.formData();
       // Don't set Content-Type for FormData, let browser set it with boundary
     } else {
       // Handle JSON data
       body = JSON.stringify(await request.json());
-      headers['Content-Type'] = 'application/json';
+      headers["Content-Type"] = "application/json";
     }
 
-    const apiUrl = API_BASE_URL
+    const apiUrl = API_BASE_URL;
     const response = await fetch(`${apiUrl}/applications/${id}`, {
       method: "PATCH",
       headers,
       body,
-    })
+    });
 
     if (!response.ok) {
-      console.error(`Backend API returned ${response.status}: ${response.statusText}`)
-      return NextResponse.json({ error: "Failed to update application" }, { status: response.status })
+      console.error(
+        `Backend API returned ${response.status}: ${response.statusText}`
+      );
+      return NextResponse.json(
+        { error: "Failed to update application" },
+        { status: response.status }
+      );
     }
 
-    const updatedApplication = await response.json()
-    return NextResponse.json(updatedApplication)
+    const updatedApplication = await response.json();
+    return NextResponse.json(updatedApplication);
   } catch (error) {
-    console.error(`Error in PATCH /api/application/${params.id}:`, error)
-    return NextResponse.json({ error: "Failed to update application" }, { status: 500 })
+    console.error(`Error in PATCH /api/application/${params.id}:`, error);
+    return NextResponse.json(
+      { error: "Failed to update application" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Get JWT token from cookie
+    const jwtToken = request.cookies.get("jwt_token")?.value;
+
+    if (!jwtToken) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    const { id } = params;
+
+    // Get client IP address
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const realIp = request.headers.get("x-real-ip");
+    const remoteAddress = forwardedFor?.split(",")[0] || realIp || "unknown";
+
+    const apiUrl = API_BASE_URL;
+    const response = await fetch(`${apiUrl}/applications/${id}`, {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${jwtToken}`,
+        "X-Forwarded-For": remoteAddress,
+      },
+    });
+
+    if (!response.ok) {
+      console.error(
+        `Backend API returned ${response.status}: ${response.statusText}`
+      );
+      return NextResponse.json(
+        { error: "Failed to delete application" },
+        { status: response.status }
+      );
+    }
+
+    // Return success response (DELETE might return empty body)
+    try {
+      const result = await response.json();
+      return NextResponse.json(result);
+    } catch {
+      // If no JSON response, return success
+      return NextResponse.json({
+        success: true,
+        message: "Application deleted successfully",
+      });
+    }
+  } catch (error) {
+    console.error(`Error in DELETE /api/application/${params.id}:`, error);
+    return NextResponse.json(
+      { error: "Failed to delete application" },
+      { status: 500 }
+    );
   }
 }

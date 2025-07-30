@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { FileText, Clock, CheckCircle, AlertCircle, Plus } from "lucide-react";
+import { FileText, Clock, CheckCircle, AlertCircle, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import {
@@ -42,6 +42,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { PreferenceSelector } from "@/components/preference-selector";
 
 // Types
@@ -407,6 +418,30 @@ async function fetchApplications(filters?: {
   }
 }
 
+// Delete application function
+async function deleteApplication(applicationId: string): Promise<void> {
+  try {
+    const response = await fetch(`/api/application/${applicationId}`, {
+      method: "DELETE",
+      credentials: "include", // Include cookies for JWT token
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || "Failed to delete application");
+    }
+
+    console.log("Application deleted successfully:", applicationId);
+  } catch (error) {
+    console.error("Error deleting application:", error);
+    throw error;
+  }
+}
+
 function getStatusIcon(status: string) {
   switch (status) {
     case "completed":
@@ -464,9 +499,9 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between space-y-2 min-w-0">
         <div className="flex items-center space-x-2 min-w-0">
-          
+
           <h2 className="text-3xl font-bold tracking-tight truncate">
-             Dashboard
+            Dashboard
           </h2>
         </div>
         <div className="flex items-center space-x-4 flex-shrink-0">
@@ -580,7 +615,10 @@ export default function Dashboard() {
 
       {/* All Applications Table */}
       {!error && applications.length > 0 && (
-        <ApplicationsTable applications={applications} />
+        <ApplicationsTable
+          applications={applications}
+          onApplicationDeleted={handleApplications}
+        />
       )}
 
       {/* Empty State */}
@@ -604,7 +642,36 @@ export default function Dashboard() {
 }
 
 // Client component for interactive table
-function ApplicationsTable({ applications }: { applications: Application[] }) {
+function ApplicationsTable({
+  applications,
+  onApplicationDeleted
+}: {
+  applications: Application[];
+  onApplicationDeleted: () => void;
+}) {
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (applicationId: string, companyName: string) => {
+    setDeletingId(applicationId);
+    try {
+      await deleteApplication(applicationId);
+      toast({
+        title: "Success",
+        description: `Application for ${companyName} deleted successfully`,
+      });
+      onApplicationDeleted(); // Refresh the applications list
+    } catch (error) {
+      console.error("Delete failed:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete application",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <Card className="min-w-0">
       <CardHeader>
@@ -614,27 +681,6 @@ function ApplicationsTable({ applications }: { applications: Application[] }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
-        {/* Search and Filter Controls */}
-        {/* <div className="flex items-center space-x-4 mb-6 p-6 pb-0">
-          <div className="relative flex-1 max-w-sm min-w-0">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search companies or founders..."
-              className="pl-8"
-            />
-          </div>
-          <Select>
-            <SelectTrigger className="w-[180px] flex-shrink-0">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="submitted">Submitted</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-            </SelectContent>
-          </Select>
-        </div> */}
-
         {/* Applications Table */}
         <div className="overflow-x-auto">
           <Table>
@@ -646,6 +692,7 @@ function ApplicationsTable({ applications }: { applications: Application[] }) {
                 <TableHead className="min-w-[100px]">Status</TableHead>
                 <TableHead className="min-w-[80px]">Score</TableHead>
                 <TableHead className="min-w-[120px]">Submission Date</TableHead>
+                <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -675,6 +722,41 @@ function ApplicationsTable({ applications }: { applications: Application[] }) {
                   </TableCell>
                   <TableCell className="whitespace-nowrap">
                     {app.submittedAt}
+                  </TableCell>
+                  <TableCell>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={deletingId === app.id}
+                        >
+                          {deletingId === app.id ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900" />
+                          ) : (
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          )}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Application</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete the application for{" "}
+                            <strong>{app.companyName}</strong>? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(app.id, app.companyName)}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </TableCell>
                 </TableRow>
               ))}

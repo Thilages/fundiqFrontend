@@ -33,8 +33,11 @@ export async function isCustomEvaluationEnabled(): Promise<boolean> {
     });
 
     if (response.ok) {
-      const data = await response.json();
-      return data?.preferences?.use_custom_eval ?? false;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        return data?.preferences?.use_custom_eval ?? false;
+      }
     }
     return false;
   } catch (error) {
@@ -95,46 +98,49 @@ export function PreferenceSelector() {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        console.log("Fetched preferences:", data.preferences);
-        // Handle both old and new data structures
-        if (data) {
-          // Old structure - convert to new structure
-          const loadedPreferences = {
-            ...data.preferences,
-            id: data.preferences?.id || data.id,
-            use_custom_eval: data.preferences?.use_custom_eval ?? false,
-          };
-          setPreferences(loadedPreferences);
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          console.log("Fetched preferences:", data.preferences);
+          // Handle both old and new data structures
+          if (data) {
+            // Old structure - convert to new structure
+            const loadedPreferences = {
+              ...data.preferences,
+              id: data.preferences?.id || data.id,
+              use_custom_eval: data.preferences?.use_custom_eval ?? false,
+            };
+            setPreferences(loadedPreferences);
 
-          // Sync localStorage with loaded state
-          if (loadedPreferences.use_custom_eval && loadedPreferences.id) {
-            localStorage.setItem("selectedPreference", loadedPreferences.id);
-            console.log("Stored preference ID in localStorage:", loadedPreferences.id);
-          } else {
-            localStorage.removeItem("selectedPreference");
-          }
-        } else if (data.overall_custom_eval !== undefined) {
-          // New structure
-          const loadedPreferences = {
-            id: data.id,
-            overall_custom_eval: data.overall_custom_eval || "",
-            founders_custom_eval: data.founders_custom_eval || "",
-            product_custom_eval: data.product_custom_eval || "",
-            market_custom_eval: data.market_custom_eval || "",
-            vision_custom_eval: data.vision_custom_eval || "",
-            traction_custom_eval: data.traction_custom_eval || "",
-            investors_custom_eval: data.investors_custom_eval || "",
-            use_custom_eval: data.use_custom_eval ?? false,
-          };
-          setPreferences(loadedPreferences);
+            // Sync localStorage with loaded state
+            if (loadedPreferences.use_custom_eval && loadedPreferences.id) {
+              localStorage.setItem("selectedPreference", loadedPreferences.id);
+              console.log("Stored preference ID in localStorage:", loadedPreferences.id);
+            } else {
+              localStorage.removeItem("selectedPreference");
+            }
+          } else if (data.overall_custom_eval !== undefined) {
+            // New structure
+            const loadedPreferences = {
+              id: data.id,
+              overall_custom_eval: data.overall_custom_eval || "",
+              founders_custom_eval: data.founders_custom_eval || "",
+              product_custom_eval: data.product_custom_eval || "",
+              market_custom_eval: data.market_custom_eval || "",
+              vision_custom_eval: data.vision_custom_eval || "",
+              traction_custom_eval: data.traction_custom_eval || "",
+              investors_custom_eval: data.investors_custom_eval || "",
+              use_custom_eval: data.use_custom_eval ?? false,
+            };
+            setPreferences(loadedPreferences);
 
-          // Sync localStorage with loaded state
-          if (loadedPreferences.use_custom_eval && loadedPreferences.id) {
-            localStorage.setItem("selectedPreference", loadedPreferences.id);
-            console.log("Stored preference ID in localStorage:", loadedPreferences.id);
-          } else {
-            localStorage.removeItem("selectedPreference");
+            // Sync localStorage with loaded state
+            if (loadedPreferences.use_custom_eval && loadedPreferences.id) {
+              localStorage.setItem("selectedPreference", loadedPreferences.id);
+              console.log("Stored preference ID in localStorage:", loadedPreferences.id);
+            } else {
+              localStorage.removeItem("selectedPreference");
+            }
           }
         }
       } else {

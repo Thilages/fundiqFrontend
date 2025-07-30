@@ -9,6 +9,21 @@ export async function GET(
   const { firm_id } = await params;
 
   try {
+    // Get JWT token from cookie
+    const jwtToken = request.cookies.get('jwt_token')?.value;
+
+    if (!jwtToken) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Get client IP address
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const realIp = request.headers.get('x-real-ip');
+    const remoteAddress = forwardedFor?.split(',')[0] || realIp || 'unknown';
+
     const apiUrl = API_BASE_URL;
     const response = await fetch(`${apiUrl}/vc-firms/${firm_id}/preferences`, {
       method: "GET",
@@ -16,6 +31,8 @@ export async function GET(
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        'Authorization': `Bearer ${jwtToken}`,
+        'X-Forwarded-For': remoteAddress,
       },
     });
 
@@ -49,15 +66,23 @@ export async function POST(
   { params }: { params: { firm_id: string } }
 ) {
   try {
+    // Get JWT token from cookie
+    const jwtToken = request.cookies.get('jwt_token')?.value;
+
+    if (!jwtToken) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const { firm_id } = await params;
     const body = await request.json();
 
-    // Validate required fields
-    
-
-    // Validate weights structure
-    
-    
+    // Get client IP address
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const realIp = request.headers.get('x-real-ip');
+    const remoteAddress = forwardedFor?.split(',')[0] || realIp || 'unknown';
 
     const apiUrl = API_BASE_URL;
     const response = await fetch(`${apiUrl}/vc-firms/${firm_id}/preferences`, {
@@ -65,6 +90,8 @@ export async function POST(
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        'Authorization': `Bearer ${jwtToken}`,
+        'X-Forwarded-For': remoteAddress,
       },
       body: JSON.stringify(body),
     });

@@ -42,7 +42,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { API_BASE_URL } from "@/lib/config";
 import { PreferenceSelector } from "@/components/preference-selector";
 
 // Types
@@ -155,9 +154,10 @@ function AddNewApplicationModal({ onSuccess }: { onSuccess: () => void }) {
         submitFormData.append("file", file);
       }
 
-      const response = await fetch(`${API_BASE_URL}/applications`, {
+      const response = await fetch(`/api/applications`, {
         method: "POST",
         body: submitFormData,
+        credentials: "include", // Include cookies for JWT token
       });
 
       if (!response.ok) {
@@ -338,13 +338,14 @@ async function fetchApplications(filters?: {
     }
 
     const response = await fetch(
-      `${API_BASE_URL}/applications?${params.toString()}`,
+      `/api/applications?${params.toString()}`,
       {
         cache: "no-store",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
+        credentials: "include", // Include cookies for JWT token
         // Add timeout for external API
         signal: AbortSignal.timeout(30000), // 30 second timeout for potentially slow API
       }
@@ -365,7 +366,8 @@ async function fetchApplications(filters?: {
     console.log("Successfully fetched from live API:", data);
 
     // Transform the API response to match our interface
-    const transformedApplications = data.map((app: any) => ({
+    const applications = data.applications || data; // Handle both response formats
+    const transformedApplications = applications.map((app: any) => ({
       id: app.id,
       companyName: app.startup_name || "Unknown Company",
       contact_name: app.contact_name,
@@ -378,16 +380,22 @@ async function fetchApplications(filters?: {
       industry: app.industry || "Unknown",
     }));
 
-    // Calculate metrics from the data
-    const statusMetrics = {
-      total: transformedApplications.length,
-      submitted: transformedApplications.filter(
-        (app: Application) => app.status === "submitted"
-      ).length,
-      completed: transformedApplications.filter(
-        (app: Application) => app.status === "completed"
-      ).length,
-    };
+    // Use status metrics from API response if available, otherwise calculate them
+    let statusMetrics;
+    if (data.status && typeof data.status === 'object') {
+      statusMetrics = data.status;
+    } else {
+      // Calculate metrics from the data as fallback
+      statusMetrics = {
+        total: transformedApplications.length,
+        submitted: transformedApplications.filter(
+          (app: Application) => app.status === "submitted"
+        ).length,
+        completed: transformedApplications.filter(
+          (app: Application) => app.status === "completed"
+        ).length,
+      };
+    }
 
     return {
       applications: transformedApplications,

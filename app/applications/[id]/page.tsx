@@ -4,7 +4,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { API_BASE_URL } from "@/lib/config";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -87,13 +86,24 @@ export default function ApplicationDetailPage({
   const handleTriggerAction = async (action: ProcessingAction) => {
     setProcessingAction(action);
     try {
-      let url = `${API_BASE_URL}/applications/${id}?action=${action}`;
+      // Build URL with query parameters
+      let url = `/api/application/${id}?action=${action}`;
       if (action === "evaluate") {
         const prefId = localStorage.getItem("selectedPreference");
         if (prefId) url += `&preferences_id=${prefId}`;
       }
-      const response = await fetch(url, { method: "POST" });
+      
+      const response = await fetch(url, { 
+        method: "POST",
+        credentials: "include", // Include cookies for JWT token
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+      
       if (!response.ok) throw new Error(`Failed to trigger ${action}`);
+      
       toast({
         title: "Success",
         description: `The ${action} process has completed. Refreshing data...`,
@@ -114,9 +124,10 @@ export default function ApplicationDetailPage({
     const formData = new FormData();
     formData.append("file", file);
     try {
-      const response = await fetch(`${API_BASE_URL}/applications/${id}`, {
+      const response = await fetch(`/api/application/${id}`, {
         method: "PATCH",
         body: formData,
+        credentials: "include", // Include cookies for JWT token
       });
       if (!response.ok) throw new Error("Failed to upload");
       toast({

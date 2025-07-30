@@ -18,7 +18,7 @@ import {
 import { LayoutDashboard, User, FileText, Clock, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { API_BASE_URL } from "@/lib/config";
+import UserMenu from "@/components/UserMenu";
 
 const menuItems = [
   {
@@ -71,22 +71,29 @@ export function AppSidebar() {
   const fetchApplications = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/applications`, {
+      const response = await fetch(`/api/applications`, {
         cache: "no-store",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
+        credentials: "include", // Include cookies for JWT token
       });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('API did not return JSON response');
+      }
+
       const data = await response.json();
 
       // Transform the API response to match our interface
-      const transformedApplications = data.map((app: any) => ({
+      const applications = data.applications || data; // Handle both response formats
+      const transformedApplications = applications.map((app: any) => ({
         id: app.id,
         companyName: app.startup_name || "Unknown Company",
         contact_name: app.contact_name,
@@ -197,9 +204,8 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <User className="h-4 w-4" />
-          <span>Demo User</span>
+        <div className="flex items-center justify-between">
+          <UserMenu />
         </div>
       </SidebarFooter>
     </Sidebar>

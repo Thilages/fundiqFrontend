@@ -478,7 +478,21 @@ const mockApplicationDetails: { [key: string]: any } = {
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // Get JWT token from cookie
+    const jwtToken = request.cookies.get('jwt_token')?.value;
+
+    if (!jwtToken) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
     const { id } = params
+
+    // Get client IP address
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const realIp = request.headers.get('x-real-ip');
+    const remoteAddress = forwardedFor?.split(',')[0] || realIp || 'unknown';
 
     const apiUrl = API_BASE_URL
     const response = await fetch(`${apiUrl}/applications/${id}`, {
@@ -486,6 +500,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        'Authorization': `Bearer ${jwtToken}`,
+        'X-Forwarded-For': remoteAddress,
       },
     })
 
@@ -505,19 +521,109 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    // Get JWT token from cookie
+    const jwtToken = request.cookies.get('jwt_token')?.value;
+
+    if (!jwtToken) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    const { id } = params
+    const { searchParams } = new URL(request.url)
+    const action = searchParams.get("action")
+    const preferencesId = searchParams.get("preferences_id")
+    
+    if (!action) {
+      return NextResponse.json(
+        { error: 'Action parameter is required' },
+        { status: 400 }
+      );
+    }
+
+    // Get client IP address
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const realIp = request.headers.get('x-real-ip');
+    const remoteAddress = forwardedFor?.split(',')[0] || realIp || 'unknown';
+
+    // Build the API URL with query parameters
+    let apiUrl = `${API_BASE_URL}/applications/${id}?action=${action}`;
+    if (preferencesId) {
+      apiUrl += `&preferences_id=${preferencesId}`;
+    }
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        'Authorization': `Bearer ${jwtToken}`,
+        'X-Forwarded-For': remoteAddress,
+      },
+    })
+
+    if (!response.ok) {
+      console.error(`Backend API returned ${response.status}: ${response.statusText}`)
+      return NextResponse.json({ 
+        error: `Failed to trigger ${action}` 
+      }, { status: response.status })
+    }
+
+    const result = await response.json()
+    return NextResponse.json(result)
+  } catch (error) {
+    console.error(`Error in POST /api/application/${params.id}:`, error)
+    return NextResponse.json({ error: "Failed to trigger action" }, { status: 500 })
+  }
+}
+
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // Get JWT token from cookie
+    const jwtToken = request.cookies.get('jwt_token')?.value;
+
+    if (!jwtToken) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const { id } = params
-    const body = await request.json()
+    
+    // Get client IP address
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const realIp = request.headers.get('x-real-ip');
+    const remoteAddress = forwardedFor?.split(',')[0] || realIp || 'unknown';
+    
+    // Check if the request contains FormData (for file uploads) or JSON
+    const contentType = request.headers.get('content-type') || '';
+    let body: any;
+    let headers: Record<string, string> = {
+      Accept: "application/json",
+      'Authorization': `Bearer ${jwtToken}`,
+      'X-Forwarded-For': remoteAddress,
+    };
+
+    if (contentType.includes('multipart/form-data')) {
+      // Handle file upload
+      body = await request.formData();
+      // Don't set Content-Type for FormData, let browser set it with boundary
+    } else {
+      // Handle JSON data
+      body = JSON.stringify(await request.json());
+      headers['Content-Type'] = 'application/json';
+    }
 
     const apiUrl = API_BASE_URL
     const response = await fetch(`${apiUrl}/applications/${id}`, {
       method: "PATCH",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
+      headers,
+      body,
     })
 
     if (!response.ok) {

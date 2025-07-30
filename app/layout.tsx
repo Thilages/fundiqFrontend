@@ -2,8 +2,8 @@ import type React from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { AppLayout } from "@/components/AppLayout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,12 +21,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-screen">
       <body className={inter.className + " h-screen"}>
-        <SidebarProvider>
-          <div className="flex h-screen">
-            <AppSidebar />
-            <main className="w-[80vw]">{children}</main>
-          </div>
-        </SidebarProvider>
+        <AuthProvider>
+          <AppLayout>{children}</AppLayout>
+        </AuthProvider>
       </body>
     </html>
   );

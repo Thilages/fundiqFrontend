@@ -17,56 +17,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import { Settings, Loader2, Save } from "lucide-react";
-
-// Updated firm ID as requested
-const TEMP_FIRM_ID = "f5fef2ab-f981-4e90-8845-6783ddee5de0";
+import { PreferenceService, type Preference } from "@/services";
+import { TEMP_FIRM_ID } from "@/lib/config";
 
 // Helper function to check if custom evaluations are enabled
 export async function isCustomEvaluationEnabled(): Promise<boolean> {
-  try {
-    const response = await fetch(`/api/preferences/${TEMP_FIRM_ID}`, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (response.ok) {
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const data = await response.json();
-        return data?.preferences?.use_custom_eval ?? false;
-      }
-    }
-    return false;
-  } catch (error) {
-    console.error("Failed to check custom evaluation status:", error);
-    return false;
-  }
+  return PreferenceService.isCustomEvaluationEnabled(TEMP_FIRM_ID);
 }
 
 // Helper function to get the preference ID when custom evaluation is enabled
 export async function getPreferenceId(): Promise<string | null> {
-  try {
-    const isEnabled = await isCustomEvaluationEnabled();
-    return isEnabled ? TEMP_FIRM_ID : null;
-  } catch (error) {
-    console.error("Failed to get preference ID:", error);
-    return null;
-  }
-}
-
-interface Preference {
-  id?: string;
-  overall_custom_eval: string;
-  founders_custom_eval: string;
-  product_custom_eval: string;
-  market_custom_eval: string;
-  vision_custom_eval: string;
-  traction_custom_eval: string;
-  investors_custom_eval: string;
-  use_custom_eval?: boolean;
+  return PreferenceService.getPreferenceId(TEMP_FIRM_ID);
 }
 
 export function PreferenceSelector() {
@@ -89,64 +50,47 @@ export function PreferenceSelector() {
   const fetchPreferences = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/preferences/${TEMP_FIRM_ID}`, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-      });
+      const result = await PreferenceService.getPreferences(TEMP_FIRM_ID);
 
-      if (response.ok) {
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          const data = await response.json();
-          console.log("Fetched preferences:", data.preferences);
-          // Handle both old and new data structures
-          if (data) {
-            // Old structure - convert to new structure
-            const loadedPreferences = {
-              ...data.preferences,
-              id: data.preferences?.id || data.id,
-              use_custom_eval: data.preferences?.use_custom_eval ?? false,
-            };
-            setPreferences(loadedPreferences);
+      if (result.success && result.data) {
+        console.log("Fetched preferences:", result.data);
 
-            // Sync localStorage with loaded state
-            if (loadedPreferences.use_custom_eval && loadedPreferences.id) {
-              localStorage.setItem("selectedPreference", loadedPreferences.id);
-              console.log("Stored preference ID in localStorage:", loadedPreferences.id);
-            } else {
-              localStorage.removeItem("selectedPreference");
-            }
-          } else if (data.overall_custom_eval !== undefined) {
-            // New structure
-            const loadedPreferences = {
-              id: data.id,
-              overall_custom_eval: data.overall_custom_eval || "",
-              founders_custom_eval: data.founders_custom_eval || "",
-              product_custom_eval: data.product_custom_eval || "",
-              market_custom_eval: data.market_custom_eval || "",
-              vision_custom_eval: data.vision_custom_eval || "",
-              traction_custom_eval: data.traction_custom_eval || "",
-              investors_custom_eval: data.investors_custom_eval || "",
-              use_custom_eval: data.use_custom_eval ?? false,
-            };
-            setPreferences(loadedPreferences);
+        // Handle both old and new data structures
+        const data = result.data;
+        let loadedPreferences: Preference;
 
-            // Sync localStorage with loaded state
-            if (loadedPreferences.use_custom_eval && loadedPreferences.id) {
-              localStorage.setItem("selectedPreference", loadedPreferences.id);
-              console.log("Stored preference ID in localStorage:", loadedPreferences.id);
-            } else {
-              localStorage.removeItem("selectedPreference");
-            }
-          }
+        if (data.preferences) {
+          // Old structure - convert to new structure
+          loadedPreferences = {
+            ...data.preferences,
+            id: data.preferences?.id || data.id,
+            use_custom_eval: data.preferences?.use_custom_eval ?? false,
+          };
+        } else {
+          // New structure
+          loadedPreferences = {
+            id: data.id,
+            overall_custom_eval: data.overall_custom_eval || "",
+            founders_custom_eval: data.founders_custom_eval || "",
+            product_custom_eval: data.product_custom_eval || "",
+            market_custom_eval: data.market_custom_eval || "",
+            vision_custom_eval: data.vision_custom_eval || "",
+            traction_custom_eval: data.traction_custom_eval || "",
+            investors_custom_eval: data.investors_custom_eval || "",
+            use_custom_eval: data.use_custom_eval ?? false,
+          };
         }
+
+        setPreferences(loadedPreferences);
+
+        // Sync localStorage with loaded state
+        PreferenceService.updateLocalStorage(loadedPreferences, loadedPreferences.use_custom_eval || false);
       } else {
-        console.log("No preferences found or error:", response.status);
+        console.log("No preferences found or error:", result.error);
         // Ensure localStorage is clean if no preferences found
-        localStorage.removeItem("selectedPreference");
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem("selectedPreference");
+        }
       }
     } catch (error) {
       console.error("Failed to fetch preferences:", error);
@@ -166,48 +110,24 @@ export function PreferenceSelector() {
     console.log("Submitting preferences:", preferences);
 
     try {
-      const response = await fetch(`/api/preferences/${TEMP_FIRM_ID}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(preferences),
-      });
+      const result = await PreferenceService.savePreferences(preferences, TEMP_FIRM_ID);
 
-      console.log("Response status:", response.status);
-      const responseText = await response.text();
-      console.log("Response text:", responseText);
-
-      if (!response.ok) {
-        let errorData;
-        try {
-          errorData = JSON.parse(responseText);
-        } catch {
-          errorData = { error: responseText };
-        }
-        console.error("Error response:", errorData);
-        throw new Error(
-          errorData.error || errorData.message || `HTTP error! status: ${response.status}`
-        );
+      if (!result.success) {
+        throw new Error(result.error || "Failed to save preferences");
       }
 
-      let result: any = null;
-      try {
-        result = JSON.parse(responseText);
-        // Update the preference ID if it's returned from the API
-        if (result?.id) {
-          setPreferences(prev => ({ ...prev, id: result.id }));
-          // Update localStorage if custom evaluations are enabled
-          if (preferences.use_custom_eval) {
-            localStorage.setItem("selectedPreference", result.id);
-            console.log("Updated preference ID from save response:", result.id);
-          }
+      console.log("Success response:", result.data);
+
+      // Update the preference ID if it's returned from the API
+      if (result.data?.id) {
+        const updatedPreferences = { ...preferences, id: result.data.id };
+        setPreferences(updatedPreferences);
+
+        // Update localStorage if custom evaluations are enabled
+        if (preferences.use_custom_eval) {
+          PreferenceService.updateLocalStorage(updatedPreferences, true);
         }
-      } catch {
-        result = { success: true };
       }
-      console.log("Success response:", result);
 
       toast({
         title: "Success",
@@ -239,43 +159,18 @@ export function PreferenceSelector() {
     const updatedPreferences = { ...preferences, use_custom_eval: checked };
     setPreferences(updatedPreferences);
 
-    // Update localStorage based on checkbox state
-    if (checked && preferences.id) {
-      localStorage.setItem("selectedPreference", preferences.id);
-      console.log("Custom evaluations enabled, stored preference ID in localStorage:", preferences.id);
-    } else {
-      localStorage.removeItem("selectedPreference");
-      console.log("Custom evaluations disabled, removed preference ID from localStorage");
-    }
-
-    // Auto-save the checkbox state
+    // Auto-save the checkbox state using the service
     try {
-      const response = await fetch(`/api/preferences/${TEMP_FIRM_ID}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(updatedPreferences),
-      });
+      const result = await PreferenceService.toggleCustomEvaluation(checked, preferences, TEMP_FIRM_ID);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to save setting");
       }
 
-      // Get the response data to update the preference ID if needed
-      const responseText = await response.text();
-      let result: any = null;
-      try {
-        result = JSON.parse(responseText);
-        // Update the preference ID if it's returned from the API
-        if (result?.id && checked) {
-          setPreferences(prev => ({ ...prev, id: result.id }));
-          localStorage.setItem("selectedPreference", result.id);
-          console.log("Updated preference ID from API response:", result.id);
-        }
-      } catch {
-        // Response might not be JSON, that's okay
+      // Update the preference ID if it's returned from the API
+      if (result.data?.id && checked) {
+        const newPreferences = { ...updatedPreferences, id: result.data.id };
+        setPreferences(newPreferences);
       }
 
       toast({
@@ -286,12 +181,7 @@ export function PreferenceSelector() {
       console.error("Failed to save checkbox state:", error);
       // Revert the checkbox if save failed
       setPreferences(preferences);
-      // Revert localStorage as well
-      if (checked) {
-        localStorage.removeItem("selectedPreference");
-      } else if (preferences.id) {
-        localStorage.setItem("selectedPreference", preferences.id);
-      }
+
       toast({
         title: "Error",
         description: "Failed to save setting. Please try again.",

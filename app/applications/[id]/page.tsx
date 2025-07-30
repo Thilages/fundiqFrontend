@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { ApplicationService } from "@/services";
 
 // Local Imports (New Structure)
 import { ApplicationDetail, ProcessingAction } from "./lib/types";
@@ -63,15 +64,12 @@ export default function ApplicationDetailPage({
 
   const handleSaveRawData = async (updatedRaw: any) => {
     try {
-      const response = await fetch(`/api/application/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ raw: updatedRaw }),
-      });
-      if (!response.ok) throw new Error("Failed to save");
+      const result = await ApplicationService.updateApplication(id, { raw: updatedRaw });
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to save");
+      }
+
       setApp((prev) => (prev ? { ...prev, raw: updatedRaw } : null));
       toast({ title: "Success", description: "Raw data updated successfully" });
     } catch (error) {
@@ -92,8 +90,8 @@ export default function ApplicationDetailPage({
         const prefId = localStorage.getItem("selectedPreference");
         if (prefId) url += `&preferences_id=${prefId}`;
       }
-      
-      const response = await fetch(url, { 
+
+      const response = await fetch(url, {
         method: "POST",
         credentials: "include", // Include cookies for JWT token
         headers: {
@@ -101,9 +99,9 @@ export default function ApplicationDetailPage({
           "Content-Type": "application/json",
         },
       });
-      
+
       if (!response.ok) throw new Error(`Failed to trigger ${action}`);
-      
+
       toast({
         title: "Success",
         description: `The ${action} process has completed. Refreshing data...`,
@@ -124,12 +122,15 @@ export default function ApplicationDetailPage({
     const formData = new FormData();
     formData.append("file", file);
     try {
+      // For file uploads, we need to use the base service with FormData
       const response = await fetch(`/api/application/${id}`, {
         method: "PATCH",
         body: formData,
-        credentials: "include", // Include cookies for JWT token
+        credentials: "include",
       });
+
       if (!response.ok) throw new Error("Failed to upload");
+
       toast({
         title: "Success",
         description: "Pitch deck updated. Refreshing data...",

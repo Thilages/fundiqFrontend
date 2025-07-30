@@ -19,6 +19,7 @@ import { LayoutDashboard, User, FileText, Clock, CheckCircle, AlertCircle, Loade
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import UserMenu from "@/components/UserMenu";
+import { ApplicationService } from "@/services";
 
 const menuItems = [
   {
@@ -71,43 +72,35 @@ export function AppSidebar() {
   const fetchApplications = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/applications`, {
-        cache: "no-store",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Include cookies for JWT token
-      });
+      const result = await ApplicationService.getApplications();
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to fetch applications");
       }
 
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('API did not return JSON response');
-      }
-
-      const data = await response.json();
+      const data = result.data;
 
       // Transform the API response to match our interface
-      const applications = data.applications || data; // Handle both response formats
-      const transformedApplications = applications.map((app: any) => ({
-        id: app.id,
-        companyName: app.startup_name || "Unknown Company",
-        contact_name: app.contact_name,
-        contact_email: app.contact_email,
-        status: app.status || "submitted",
-        overallScore: app.score || null,
-        submittedAt: app.created_at
-          ? new Date(app.created_at).toLocaleDateString()
-          : new Date().toLocaleDateString(),
-        industry: app.industry || "Unknown",
-      }));
+      const applications = data?.applications || data; // Handle both response formats
+      if (Array.isArray(applications)) {
+        const transformedApplications = applications.map((app: any) => ({
+          id: app.id,
+          companyName: app.startup_name || "Unknown Company",
+          contact_name: app.contact_name,
+          contact_email: app.contact_email,
+          status: app.status || "submitted",
+          overallScore: app.score || null,
+          submittedAt: app.created_at
+            ? new Date(app.created_at).toLocaleDateString()
+            : new Date().toLocaleDateString(),
+          industry: app.industry || "Unknown",
+        }));
 
-      // Get only the 5 most recent applications for sidebar
-      setApplications(transformedApplications.slice(0, 5));
+        // Get only the 5 most recent applications for sidebar
+        setApplications(transformedApplications.slice(0, 5));
+      } else {
+        setApplications([]);
+      }
       setError(null);
     } catch (err) {
       console.error("Failed to fetch applications for sidebar:", err);

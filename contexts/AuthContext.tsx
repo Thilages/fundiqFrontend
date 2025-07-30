@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { AuthService, User, AuthResponse } from '@/lib/auth-client';
+import { AuthService, type User, type AuthResponse } from '@/services';
 
 interface AuthContextType {
   user: User | null;
@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkSession = async () => {
     try {
       setLoading(true);
-      
+
       // First check localStorage for immediate restoration
       const storedUser = AuthService.getStoredUser();
       if (storedUser) {
@@ -40,10 +40,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // If no stored user, try to get session from server
       console.log('📡 No stored user, checking server session...');
-      const session = await AuthService.getSession();
-      
-      if (session.success && session.session) {
-        setUser(session.session.user);
+      const sessionResult = await AuthService.getSession();
+
+      if (sessionResult.success && sessionResult.data?.success && sessionResult.data.session) {
+        setUser(sessionResult.data.session.user);
       } else {
         setUser(null);
       }
@@ -58,13 +58,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (username: string, password: string): Promise<AuthResponse> => {
     try {
       setLoading(true);
-      const response = await AuthService.login(username, password);
-      
-      if (response.success && response.user) {
-        setUser(response.user);
+      const result = await AuthService.login({ username, password });
+
+      if (result.success && result.data?.success && result.data.user) {
+        setUser(result.data.user);
+        return result.data;
       }
-      
-      return response;
+
+      return result.data || { success: false, message: 'Login failed' };
     } catch (error) {
       console.error('Login failed:', error);
       return {
@@ -94,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-    
+
     // The JWT token is automatically sent via HTTP-only cookies
     // No need to manually add Authorization header
     return headers;

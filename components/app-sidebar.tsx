@@ -2,6 +2,7 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation"; // Import usePathname
 
 import {
   Sidebar,
@@ -15,7 +16,13 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, User, FileText, Clock, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import {
+  LayoutDashboard,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import UserMenu from "@/components/UserMenu";
@@ -34,26 +41,26 @@ const menuItems = [
 interface Application {
   id: string;
   companyName: string;
-  contact_name?: string;
-  contact_email?: string;
-  status: "submitted" | "completed" | "incomplete";
-  overallScore?: number;
+  status: "completed" | "submitted" | "incomplete";
   submittedAt: string;
-  industry?: string;
 }
 
+// Enhanced getStatusIcon with better styling
 function getStatusIcon(status: string) {
   switch (status) {
     case "completed":
-      return <CheckCircle className="h-3 w-3 text-green-500" />;
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
     case "submitted":
-      return <Clock className="h-3 w-3 text-yellow-500" />;
+      return <Clock className="h-4 w-4 text-blue-500" />;
     default:
-      return <AlertCircle className="h-3 w-3 text-gray-500" />;
+      return <AlertCircle className="h-4 w-4 text-gray-500" />;
   }
 }
 
-function getStatusBadgeVariant(status: string) {
+// Refined getStatusBadgeVariant for better color-coding
+function getStatusBadgeVariant(
+  status: string
+): "default" | "secondary" | "outline" | "destructive" {
   switch (status) {
     case "completed":
       return "default";
@@ -65,10 +72,12 @@ function getStatusBadgeVariant(status: string) {
 }
 
 export function AppSidebar() {
+  const pathname = usePathname(); // Get current path
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // --- Fetching logic remains the same ---
   const fetchApplications = async () => {
     try {
       setLoading(true);
@@ -79,24 +88,21 @@ export function AppSidebar() {
       }
 
       const data = result.data;
+      const applicationsData = data?.applications || data;
 
-      // Transform the API response to match our interface
-      const applications = data?.applications || data; // Handle both response formats
-      if (Array.isArray(applications)) {
-        const transformedApplications = applications.map((app: any) => ({
+      if (Array.isArray(applicationsData)) {
+        const transformedApplications = applicationsData.map((app: any) => ({
           id: app.id,
           companyName: app.startup_name || "Unknown Company",
-          contact_name: app.contact_name,
-          contact_email: app.contact_email,
           status: app.status || "submitted",
-          overallScore: app.score || null,
           submittedAt: app.created_at
-            ? new Date(app.created_at).toLocaleDateString()
-            : new Date().toLocaleDateString(),
-          industry: app.industry || "Unknown",
+            ? new Date(app.created_at).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })
+            : "No date",
         }));
-
-        // Get only the 5 most recent applications for sidebar
         setApplications(transformedApplications.slice(0, 5));
       } else {
         setApplications([]);
@@ -104,7 +110,7 @@ export function AppSidebar() {
       setError(null);
     } catch (err) {
       console.error("Failed to fetch applications for sidebar:", err);
-      setError("Failed to load");
+      setError("Failed to load applications");
       setApplications([]);
     } finally {
       setLoading(false);
@@ -114,26 +120,34 @@ export function AppSidebar() {
   useEffect(() => {
     fetchApplications();
   }, []);
+
   return (
-    <Sidebar className="flex-[2]">
+    <Sidebar className="flex-[2] border-r bg-muted/20">
       <SidebarHeader className="p-4 border-b">
-        <h2 className="text-lg font-semibold text-foreground">FundIQ</h2>
+        <h2 className="text-xl font-semibold text-foreground">FundIQ</h2>
         <p className="text-xs text-muted-foreground">
           Pitch Deck Evaluation Platform
         </p>
       </SidebarHeader>
 
-      <SidebarContent className="p-0">
+      <SidebarContent className="flex flex-col p-4">
         {/* Navigation Section */}
-        <SidebarGroup className="px-3 py-2">
-          <SidebarGroupLabel className="px-2 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase">
             Navigation
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+            <SidebarMenu className="mt-2 space-y-1">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton asChild className="h-9 px-2">
+                  <SidebarMenuButton
+                    asChild
+                    // Apply active state styling
+                    className={`h-10 px-3 transition-colors duration-200 ${pathname === item.url
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-muted"
+                      }`}
+                  >
                     <Link href={item.url} className="flex items-center gap-3">
                       <item.icon className="h-4 w-4 shrink-0" />
                       <span className="text-sm font-medium">{item.title}</span>
@@ -146,45 +160,49 @@ export function AppSidebar() {
         </SidebarGroup>
 
         {/* Applications Section */}
-        <SidebarGroup className="px-3 py-2">
-          <SidebarGroupLabel className="px-2 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+        <SidebarGroup className="mt-6">
+          <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground uppercase">
             Recent Applications
           </SidebarGroupLabel>
-          <SidebarGroupContent>
+          <SidebarGroupContent className="mt-2">
             {loading ? (
-              <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
             ) : error ? (
-              <div className="px-2 py-2 text-xs text-muted-foreground">
-                {error}
-              </div>
+              <div className="px-3 py-2 text-sm text-red-500">{error}</div>
             ) : applications.length === 0 ? (
-              <div className="px-2 py-2 text-xs text-muted-foreground">
-                No applications yet
+              <div className="px-3 py-2 text-sm text-muted-foreground">
+                No applications yet.
               </div>
             ) : (
               <SidebarMenu className="space-y-1">
                 {applications.map((app) => (
                   <SidebarMenuItem key={app.id}>
-                    <SidebarMenuButton asChild className="h-auto bg-gray-200">
-                      <Link href={`/applications/${app.id}`} className="flex flex-col items-start gap-1 w-full">
-                        <div className="flex items-center gap-2 w-full">
-                          {/* {getStatusIcon(app.status)} */}
-                          <span className="text-sm font-medium truncate flex-1">
+                    <SidebarMenuButton
+                      asChild
+                      className="h-auto w-full cursor-pointer rounded-lg p-3 transition-colors duration-200 hover:bg-muted"
+                    >
+                      <Link
+                        href={`/applications/${app.id}`}
+                        className="flex flex-col items-start gap-2"
+                      >
+                        <div className="flex w-full items-center justify-between">
+                          <span className="text-sm font-semibold truncate">
                             {app.companyName}
                           </span>
+                          {getStatusIcon(app.status)}
                         </div>
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-xs text-muted-foreground truncate">
-                            {app.submittedAt}
-                          </span>
-                          {/* <Badge
-                            variant={getStatusBadgeVariant(app.status) as any}
-                            className="text-xs h-4 px-1"
+                        <div className="flex w-full items-center justify-between">
+                          <Badge
+                            variant={getStatusBadgeVariant(app.status)}
+                            className="text-xs capitalize"
                           >
                             {app.status}
-                          </Badge> */}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {app.submittedAt}
+                          </span>
                         </div>
                       </Link>
                     </SidebarMenuButton>
@@ -196,10 +214,8 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t">
-        <div className="flex items-center justify-between">
-          <UserMenu />
-        </div>
+      <SidebarFooter className="p-4 border-t mt-auto bg-muted/20">
+        <UserMenu />
       </SidebarFooter>
     </Sidebar>
   );

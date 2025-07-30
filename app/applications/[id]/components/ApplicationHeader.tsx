@@ -153,14 +153,14 @@ export function ApplicationHeader({
                 <Eye className="mr-2 h-4 w-4" />
                 {loading ? "Opening..." : "View PDF"}
               </Button>
-              <Dialog>
+              {/* <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="ghost" size="sm">
                     <Edit className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
                 <FileUploadModal onUpload={onFileUpload} />
-              </Dialog>
+              </Dialog> */}
             </div>
           </div>
         </div>

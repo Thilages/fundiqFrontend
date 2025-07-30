@@ -178,4 +178,29 @@ export class ApplicationService extends BaseService {
 
     return result;
   }
+
+  /**
+   * Get file view URL for an application's deck
+   */
+  static async getFileViewUrl(
+    applicationId: string,
+    attachmentId?: string
+  ): Promise<ApiResponse<{ signed_url: string }>> {
+    console.log("🔍 Getting file view URL for application:", applicationId);
+
+    let endpoint = `/api/applications/${applicationId}/deck`;
+    if (attachmentId) {
+      endpoint += `?attachment_id=${attachmentId}`;
+    }
+
+    const result = await this.get<{ signed_url: string }>(endpoint);
+
+    if (result.success) {
+      console.log("✅ Successfully got file view URL");
+    } else {
+      console.error("❌ Failed to get file view URL:", result.error);
+    }
+
+    return result;
+  }
 }

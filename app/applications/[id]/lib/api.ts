@@ -1,5 +1,5 @@
 import { ApplicationService } from "@/services";
-import { ApplicationDetail } from "./types";
+import { ApplicationDetail, PdfViewResponse } from "./types";
 
 export async function fetchApplication(id: string): Promise<ApplicationDetail> {
   const result = await ApplicationService.getApplication(id);
@@ -12,4 +12,24 @@ export async function fetchApplication(id: string): Promise<ApplicationDetail> {
   }
 
   return result.data!;
+}
+
+export async function getFileViewUrl(
+  applicationId: string,
+  attachmentId?: string
+): Promise<string> {
+  const result = await ApplicationService.getFileViewUrl(
+    applicationId,
+    attachmentId
+  );
+
+  if (!result.success) {
+    throw new Error(result.error || "Failed to get file view URL");
+  }
+
+  if (!result.data?.signed_url) {
+    throw new Error("No signed URL received from server");
+  }
+
+  return result.data.signed_url;
 }

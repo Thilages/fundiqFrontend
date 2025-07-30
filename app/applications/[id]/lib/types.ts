@@ -41,3 +41,10 @@ export interface ApplicationDetail {
 
 // Type for processing actions
 export type ProcessingAction = "extract" | "enhance" | "evaluate";
+
+// Type for PDF view response
+export interface PdfViewResponse {
+  success: boolean;
+  signed_url?: string;
+  error?: string;
+}

@@ -1,16 +1,18 @@
 // pitchdeck/app/applications/[id]/components/ApplicationHeader.tsx
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { ArrowLeft, Edit, FileText, AlertCircle } from "lucide-react";
+import { ArrowLeft, Edit, AlertCircle, Eye } from "lucide-react";
 import { ApplicationDetail } from "../lib/types";
 import { getStatusBadge } from "../lib/utils";
-import { FileUploadModal } from "./FileUploadModal"; // Will be created next
+import { FileUploadModal } from "./FileUploadModal";
+import { useToast } from "@/hooks/use-toast";
+import { openPdfInNewTab } from "../lib/pdf-viewer";
 
 interface ApplicationHeaderProps {
   app: ApplicationDetail;
@@ -23,6 +25,25 @@ export function ApplicationHeader({
   error,
   onFileUpload,
 }: ApplicationHeaderProps) {
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleViewPdf = async () => {
+    setLoading(true);
+    try {
+      await openPdfInNewTab(app.id);
+    } catch (error) {
+      console.error('Failed to open PDF:', error);
+      toast({
+        title: "Error",
+        description: "Failed to open PDF. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Error state display
   if (error) {
     return (
@@ -123,18 +144,23 @@ export function ApplicationHeader({
               Pitch Deck:
             </span>
             <div className="mt-1 flex items-center space-x-2">
-              <Button variant="outline" size="sm">
-                <FileText className="mr-2 h-4 w-4" />
-                View
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleViewPdf}
+                disabled={loading}
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                {loading ? "Opening..." : "View PDF"}
               </Button>
-              <Dialog>
+              {/* <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="ghost" size="sm">
                     <Edit className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
                 <FileUploadModal onUpload={onFileUpload} />
-              </Dialog>
+              </Dialog> */}
             </div>
           </div>
         </div>

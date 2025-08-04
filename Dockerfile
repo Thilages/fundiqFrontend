@@ -10,7 +10,7 @@ COPY package.json yarn.lock ./
 RUN yarn install --inline-builds --refresh-lockfile
 
 # Copy .env before build so Next.js can use it
-COPY .env ./
+COPY .env.production .env
 
 # Copy the rest of the app
 COPY . .
